@@ -1,27 +1,25 @@
-# QEMU/KVM 
-# VERSION 0.5
-FROM ubuntu:trusty
-MAINTAINER ulexus@gmail.com
+FROM ubuntu:14.04.2
+MAINTAINER Doro Wu <fcwu.tw@gmail.com>
 
-ENV ETCDCTL_VERSION v2.0.9
-ENV ETCDCTL_ARCH linux-amd64
+ENV DEBIAN_FRONTEND noninteractive
+ENV HOME /root
 
-RUN apt-get -y update
-RUN apt-get -y upgrade
+RUN apt-get update \
+    && apt-get install -y --force-yes --no-install-recommends qemu-kvm \
+        supervisor qemu-utils wget \
+    && apt-get autoclean \
+    && apt-get autoremove \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install QEMU/KVM
-RUN apt-get -y install qemu-kvm
+ADD startup.sh /
 
-# Install Ceph common utilities/libraries
-RUN apt-get -y install ceph-common wget
-
-# Install etcdctl
-RUN wget -q -O- "https://github.com/coreos/etcd/releases/download/${ETCDCTL_VERSION}/etcd-${ETCDCTL_VERSION}-${ETCDCTL_ARCH}.tar.gz" |tar xfz - -C/tmp/ etcd-${ETCDCTL_VERSION}-${ETCDCTL_ARCH}/etcdctl
-RUN mv /tmp/etcd-${ETCDCTL_VERSION}-${ETCDCTL_ARCH}/etcdctl /usr/local/bin/etcdctl
-
-# Add entrypoint script
-ADD entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD []
+EXPOSE 5900
+ENV VM_RAM 2048
+ENV VM_DISK_IMAGE_SIZE 10G
+ENV VM_DISK_IMAGE /data/disk-image
+ENV VM_DISK_IMAGE_CREATE_IF_NOT_EXIST 1
+ENV ISO http://releases.ubuntu.com/14.04.2/ubuntu-14.04.2-desktop-amd64.iso
+ENV ISO_FORCE_DOWNLOAD 0
+ENV REMOTE_ACCESS SPICE
+VOLUME /data
+ENTRYPOINT ["/startup.sh"]
