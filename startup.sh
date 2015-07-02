@@ -89,10 +89,19 @@ fi
 echo "Using ${NETWORK}"
 echo "parameter: ${FLAGS_NETWORK}"
 
+echo "[Remote Access]"
+if [ -z "$REMOTE_ACCESS" ] || [ "$REMOTE_ACCESS" == "spice" ]; then
+    FLAGS_REMOTE_ACCESS="-vga qxl -spice port=${SPICE_PORT},addr=0.0.0.0,disable-ticketing"
+elif [ "$REMOTE_ACCESS" == "vnc" ]; then
+    FLAGS_REMOTE_ACCESS="-vnc :0"
+fi
+echo "parameter: ${FLAGS_REMOTE_ACCESS}"
+
 
 # Execute with default settings
+/noVNC/utils/launch.sh --listen 6080 &
 set -x
-exec /usr/bin/kvm -vga qxl -spice port=${SPICE_PORT},addr=0.0.0.0,disable-ticketing \
+exec /usr/bin/kvm ${FLAGS_REMOTE_ACCESS} \
    -k en-us -m ${VM_RAM} -cpu qemu64 \
    ${FLAGS_NETWORK} \
    ${FLAGS_ISO} \
